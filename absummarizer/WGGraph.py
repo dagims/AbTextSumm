@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import codecs
@@ -118,11 +118,11 @@ class word_graph:
             
             # Tokenize the current sentence in word/POS
             sentence = self.sentence[i].split(' ')
-            #print sentence
+            #print (sentence)
             # Creating an empty container for the cleaned up sentence
             container = [(self.start, self.start)]
             
-            #print "======", sentence,'==========='
+            #print ("======", sentence,'===========')
             # Looping over the words
             j=0
             p=0
@@ -156,7 +156,7 @@ class word_graph:
              
                 if (POS.strip() == ",") and p == 1:
                     continue
-                #print token, POS
+                #print (token, POS)
                 if "RT" in token:
                     continue
                 token=token.lstrip("#")
@@ -532,7 +532,7 @@ class word_graph:
             # 4. Connects the mapped words with directed edges
             #-------------------------------------------------------------------
             for j in range(1, len(mapping)):
-                #print 'Mapping j-1', mapping[j-1], self.graph.node[mapping[j-1]]['info']
+                #print ('Mapping j-1', mapping[j-1], self.graph.node[mapping[j-1]]['info'])
                 self.graph.add_edge(mapping[j-1], mapping[j], marker=1)
 
         # Assigns a weight to each node in the graph ---------------------------
@@ -730,7 +730,7 @@ class word_graph:
 
         # Loop over the sentences
         for i in range(self.length):
-            #print self.sentence[i]
+            #print (self.sentence[i])
             # For each tuple (token, POS) of sentence i
             for token, POS in self.sentence[i]:
             
@@ -837,7 +837,7 @@ def sentenceTuple(sentence):
         else:
             modSentence.append((w,t))  
         position +=1    
-    #print modSentence
+    #print (modSentence)
     return modSentence
 
 def load_stopwords(path):
@@ -890,7 +890,7 @@ def find_all_paths_nx(graph, start, end):
     queue = [(start, end, path)]
     while queue:
         start, end, path = queue.pop()
-        #print 'PATH', path
+        #print ('PATH', path)
         path = path + [start]
         if start == end and len(path)>= 12 and len(path)<= 15:
             paths.append(path)
@@ -913,7 +913,7 @@ def find_all_paths_igraph_adj(graph, start, end):
                 return paths
         return paths
 
-    adjlist = [set(graph.neighbors(node)) for node in xrange(graph.vcount())]
+    adjlist = [set(graph.neighbors(node)) for node in range(graph.vcount())]
     return find_all_paths_aux(adjlist, start, end, [])
 
 def find_all_paths_tamas(graph, start, end):
@@ -931,7 +931,7 @@ def find_all_paths_tamas(graph, start, end):
             #    return paths
         return paths
 
-    adjlist = [set(graph.neighbors(node)) for node in xrange(graph.vcount())]
+    adjlist = [set(graph.neighbors(node)) for node in range(graph.vcount())]
     return find_all_paths_aux_tamas(adjlist, start, end, [])
 
 
@@ -953,9 +953,9 @@ def adjlist_find_paths(a, n, m, path=[]):
                     continue
                 if len(child_path)>25: #<=25:
                     continue
-                #print "Appending path"
+                #print ("Appending path")
                 paths.append(child_path)
-                #print len(paths)
+                #print (len(paths))
                 if (len(paths)>=1000):
                     return paths
     return paths
@@ -1005,9 +1005,9 @@ def retrieveNewSentences(sentences, stopwords, mode=None):
     compresser = word_graph(taggedTweets, 
                                 lang = 'en', 
                                 punct_tag = "PUNCT" )
-    print "Number of nodes", nx.number_of_nodes(compresser.graph)
+    print ("Number of nodes", nx.number_of_nodes(compresser.graph))
 #candidates = compresser.get_compression(100)
-    #print compresser.graph.nodes(data='True')
+    #print (compresser.graph.nodes(data='True'))
     '''
     #NOT USING THIS NOW: THIS is for IGRAPH
     
@@ -1029,14 +1029,14 @@ def retrieveNewSentences(sentences, stopwords, mode=None):
     #nlist= nx.nodes(compresser.graph)
     
     #for n in nlist:
-    #    print 'Info', compresser.graph.node[n]['info']
+    #    print ('Info', compresser.graph.node[n]['info'])
         
     
     g=nx.convert_node_labels_to_integers(compresser.graph)
     nodelist=g.nodes(data=True)
     for node in nodelist:
         n, r = node
-        #print 'Labels--', r['label']
+        #print ('Labels--', r['label'])
         if r['label']=='-start-':
             startnode=n
         if r['label']=='-end-':
@@ -1050,7 +1050,7 @@ def retrieveNewSentences(sentences, stopwords, mode=None):
     '''
     
     for node in nodelist:
-        #print node
+        #print (node)
         r, d = node
         if d['label'] not in ['-start-','-end-']:
             label_list.append((d['info'],d['label']))  
@@ -1067,17 +1067,18 @@ def retrieveNewSentences(sentences, stopwords, mode=None):
         allpaths.append(path)
         if len(allpaths) >=100000:
             break
-    print "Total time for getting all paths in seconds: ", (timeit.default_timer()-starttime), " s" 
+    print ("Total time for getting all paths in seconds: ",
+           (timeit.default_timer()-starttime), " s")
    
     
-    print "Total paths, ", len(allpaths)
+    print ("Total paths, ", len(allpaths))
     shuffle(allpaths)
 
     #allpaths=allpaths[0:10000]
     generatedSentences = []
     sentence_container = {}
     for path in allpaths:
-        #print 'Path', path
+        #print ('Path', path)
         if len(path)<12:
             continue
         paired_parentheses = 0
@@ -1085,10 +1086,10 @@ def retrieveNewSentences(sentences, stopwords, mode=None):
         sentence=''
         i=0
         total_in_path=len(path)
-        #print total_in_path
+        #print (total_in_path)
         for element in path:
             label= label_list[element][1]
-            #print label, i
+            #print (label, i)
             if i == (total_in_path - 2):
                 sentence = sentence + ' ' + label.split("||")[0]+" "+ label.split("||")[1]
             else:
@@ -1096,7 +1097,7 @@ def retrieveNewSentences(sentences, stopwords, mode=None):
             i+=1
         avgSim = avgPairwiseSimilarity(simMatrix, getSentIndices(path, label_list))
         for word in sentence.split():
-                #print word
+                #print (word)
             if word == '(':
                 paired_parentheses -= 1
             elif word == ')':
@@ -1114,14 +1115,14 @@ def retrieveNewSentences(sentences, stopwords, mode=None):
     
     #else:
     generatedSentences=generatedSentences[0:300]
-    print "Num variables -->", len(generatedSentences)
+    print ("Num variables -->", len(generatedSentences))
     
     svolist=[]
     
     generatedSentences=removeSimilarSentences(generatedSentences, sentences, stopwords)
     
     return generatedSentences, svolist
-#    print generatedSentences
+#    print (generatedSentences)
 
 
 def avgPairwiseSimilarity(simMatrix, indices):
@@ -1130,12 +1131,12 @@ def avgPairwiseSimilarity(simMatrix, indices):
     num=0.0
     if num_elements==1:
         return 0.00001
-    for i in xrange(0, num_elements-1):
-        for j in xrange(i+1, num_elements):
+    for i in range(0, num_elements-1):
+        for j in range(i+1, num_elements):
             sum_sim+=simMatrix[i,j] 
             num+=1
     
-    #print num
+    #print (num)
     return (sum_sim/num)
             
     
@@ -1143,7 +1144,7 @@ def getSentIndices(path, labellist):
     sentenceSet=set()
     path_length=len(path)
     
-    for i in xrange(1,path_length):
+    for i in range(1,path_length):
         keys1=labellist[path[i-1]][0]
         sentindices_1=[sentnum for sentnum, wordnum in keys1]
         keys2=labellist[path[i]][0]
@@ -1165,15 +1166,15 @@ def removeSimilarSentences(generatedSentences, originalSentences,  stopwords,thr
     normalized = TfidfTransformer().fit_transform(bow_matrix)
     #simMatrix = (normalized[0:] * normalized[0:].T).A
     simindices=[]
-    #print 'Num original, ', len(originalSentences)
-    for i in xrange(len(generatedSentences)):
+    #print ('Num original, ', len(originalSentences))
+    for i in range(len(generatedSentences)):
         simGeneratedScores = linear_kernel(normalized[i], normalized[len(generatedSentences):]).flatten()
         if(max(simGeneratedScores) >= threshold):
             simindices.append(i)
     
-    #print simindices
+    #print (simindices)
     finalGen=[sentence for k,sentence in enumerate(generatedSentences) if k not in simindices]
-    #print len(generatedSentences), len(finalGen)
+    #print (len(generatedSentences), len(finalGen))
     return finalGen
 
 
@@ -1185,19 +1186,19 @@ def getSVO(sentence):
     relationList=s.sentences[0].relations
     if 'SBJ' in relationList:
         for chunk in relationList['SBJ'].values():
-            #print chunk.words
+            #print (chunk.words)
             sbjstring =sbjstring+' '+ ' '.join(word.string for word in chunk.words)
     if 'OBJ' in relationList:
         for chunk in relationList['OBJ'].values():
-            #print chunk.words
+            #print (chunk.words)
             objstring =objstring+' '+ ' '.join(word.string for word in chunk.words)
     if 'VP' in relationList:
         for chunk in relationList['VP'].values():
-            #print chunk.words
+            #print (chunk.words)
             vpstring =vpstring+' '+ ' '.join(word.string for word in chunk.words)        
-    #print sbjstring.strip()
-    #print objstring.strip()
-    #print vpstring.strip()
+    #print (sbjstring.strip())
+    #print (objstring.strip())
+    #print (vpstring.strip())
     return sbjstring.strip(), vpstring.strip(), objstring.strip()
 
 
@@ -1208,7 +1209,7 @@ def simCalcMatrix(docs):
     return cosineSimilarities
 
 def generateSimMatrix(phraseList):
-    #print 'Num elements', len(phraseList), phraseList
+    #print ('Num elements', len(phraseList), phraseList)
     all_elements=[]
     #for elementlist in phraseList:
     for element in phraseList:
@@ -1252,7 +1253,7 @@ def solveILPFactBased(groupedList, languageModel, stopwords,ranker, intraGenSimT
     if len(groupedList) == 0:
         return
     # Create a new model
-    print "Starting to solve ILP...."
+    print ("Starting to solve ILP....")
     
     m = LpProblem("mip1", LpMaximize)
     sbjthreshold=0.3
@@ -1312,17 +1313,17 @@ def solveILPFactBased(groupedList, languageModel, stopwords,ranker, intraGenSimT
 
 
     varlist=[]        
-    for i in xrange(len(docs)):
+    for i in range(len(docs)):
             var=LpVariable("var_"+str(i),cat=LpBinary)
             varlist.append(var)
     
     if mode=="Abstractive":
-        m += lpSum([txtRankScores[i]*lingQualityScores[i]*varlist[i] for i in xrange(len(txtRankScores))]), "Obj function"  
+        m += lpSum([txtRankScores[i]*lingQualityScores[i]*varlist[i] for i in range(len(txtRankScores))]), "Obj function"  
     else:
-        m += lpSum([txtRankScores[i]*varlist[i] for i in xrange(len(txtRankScores))]), "Obj function" 
+        m += lpSum([txtRankScores[i]*varlist[i] for i in range(len(txtRankScores))]), "Obj function" 
     
     visitedlist=[]
-    for i in xrange(len(varlist)):
+    for i in range(len(varlist)):
         i_indices=np.where(cosine_similarity_matrix_i[i,:]>= objthreshold)[0]
         m_indices=np.where(cosine_similarity_matrix_m[i,:]>= objthreshold)[0]
         e_indices=np.where(cosine_similarity_matrix_e[i,:]>= objthreshold)[0]
@@ -1338,7 +1339,7 @@ def solveILPFactBased(groupedList, languageModel, stopwords,ranker, intraGenSimT
             
             if j==len(varlist):
                 continue
-            #print j
+            #print (j)
             if (i, j) not in visitedlist:
                 visitedlist.append((i,j))
                 m+=varlist[i] + varlist[j] <=1.0, "constraint_facts_svo_"+str(i)+"_"+varlist[i].name+"_"+varlist[j].name 
@@ -1351,8 +1352,8 @@ def solveILPFactBased(groupedList, languageModel, stopwords,ranker, intraGenSimT
         normalized_ilist = TfidfTransformer().fit_transform(bow_matrix_ilist)
         cosine_similarity_matrix_ilist = (normalized_ilist * normalized_ilist.T).A
         r_indices=np.where(cosine_similarity_matrix_ilist[lastelement,:]>= objthreshold)[0]
-        #print len(completelist)
-        #print "R_indices", r_indices
+        #print (len(completelist))
+        #print ("R_indices", r_indices)
         oth_indices=r_indices
         completelist=[]
         completelist.extend(elist)
@@ -1361,7 +1362,7 @@ def solveILPFactBased(groupedList, languageModel, stopwords,ranker, intraGenSimT
         normalized_ilist = TfidfTransformer().fit_transform(bow_matrix_ilist)
         cosine_similarity_matrix_ilist = (normalized_ilist * normalized_ilist.T).A
         r_indices=np.where(cosine_similarity_matrix_ilist[lastelement,:]>= objthreshold)[0]
-        #print "P_indices", p_indices
+        #print ("P_indices", p_indices)
         oth_indices=np.concatenate((oth_indices, r_indices)) 
          
         completelist=[]
@@ -1371,7 +1372,7 @@ def solveILPFactBased(groupedList, languageModel, stopwords,ranker, intraGenSimT
         normalized_ilist = TfidfTransformer().fit_transform(bow_matrix_ilist)
         cosine_similarity_matrix_ilist = (normalized_ilist * normalized_ilist.T).A
         r_indices=np.where(cosine_similarity_matrix_ilist[lastelement,:]>= objthreshold)[0]
-        #print "Q_indices", q_indices
+        #print ("Q_indices", q_indices)
         oth_indices=np.concatenate((oth_indices, r_indices)) 
         
         oth_indices=np.unique(oth_indices).tolist()
@@ -1381,23 +1382,23 @@ def solveILPFactBased(groupedList, languageModel, stopwords,ranker, intraGenSimT
             
             if j==len(varlist):
                 continue
-            #print j
+            #print (j)
             if (i, j) not in visitedlist:
                 visitedlist.append((i,j))
                 m+=varlist[i] + varlist[j] <=1.0, "constraint_facts_comps_"+str(i)+"_"+varlist[i].name+"_"+varlist[j].name 
         
 
     gen_lengths=[]
-    for i in xrange(len(txtRankScores)):
+    for i in range(len(txtRankScores)):
         words=docs[i].split(" ")
         count=0
         for word in words:
             if word[0].isalpha() or word[0].isdigit():
                 count+=1
         gen_lengths.append(count)
-    #print "Gen Lengths" , gen_lengths
+    #print ("Gen Lengths" , gen_lengths)
  
-    m += lpSum([varlist[i]*gen_lengths[i] for i in xrange(len(txtRankScores))]) <= l_max, "length of summary"  
+    m += lpSum([varlist[i]*gen_lengths[i] for i in range(len(txtRankScores))]) <= l_max, "length of summary"  
 
     m.solve()
     solutionList=[] 

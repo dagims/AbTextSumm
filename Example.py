@@ -10,8 +10,8 @@ import re
 import nltk
 from absummarizer.summarizer import segmentize
 
-PROJECT_DIR=os.path.dirname(__file__)+"/../"
-print "Project dir", PROJECT_DIR
+PROJECT_DIR=os.path.dirname(__file__)+"./"
+print ("Project dir", PROJECT_DIR)
 RESOURCES_DIR=PROJECT_DIR+"resources/"
 stopwords=wg.load_stopwords(RESOURCES_DIR+"stopwords.en.dat")  
 
@@ -27,7 +27,7 @@ def tweetCleaner(sentences):
     p=re.compile(r'http?:\/\/.*[\s\r\n]*', re.DOTALL) #Regex to remove http from sentences
     p2=re.compile(r'(^|\s)#.+?\s', re.DOTALL) #Regex
     p3=re.compile(r'(^|\s)@.+?(\s|$)', re.DOTALL) 
-    print "Initial sentences=>", len(sentences)
+    print ("Initial sentences=>", len(sentences))
     final_sentences=[]
     for text in sentences:
         text=text.strip()
@@ -42,7 +42,7 @@ def tweetCleaner(sentences):
                 final_sentences.append(r.strip()+' ./PUNCT')
     
     final_sentences=set(final_sentences) 
-    #print "Final sentences=>", len(final_sentences)
+    #print("Final sentences=>", len(final_sentences))
     return final_sentences
 
 def getClasses(folder):
@@ -134,16 +134,16 @@ def generateSummaries(sentences, length=100, mode = "Extractive", ranker = ranki
     
         
         summary=txtFromSents(finalSentencesRetained)
-        print "=======Summary:===== \n", summary           
+        print ("=======Summary:===== \n", summary)
     
     if mode == "Extractive":
         lm=[] #No need of language model in Extractive
         #if len(sentences) <= 2:
         #    summary=txtFromSents(sentences)
-        #    print "Summary: ", summary 
+        #    print("Summary: ", summary)
         #    return 
         
-        print sentences
+        print (sentences)
         finalSentencesRetained=wg.solveILPFactBased(sentences,
                                             lm,                                            
                                             stopwords, 
@@ -153,9 +153,9 @@ def generateSummaries(sentences, length=100, mode = "Extractive", ranker = ranki
                                             mode="Extractive"
                                             )
         
-        print 'Final sentences,', finalSentencesRetained
+        print ('Final sentences,', finalSentencesRetained)
         summary=txtFromSents(finalSentencesRetained)
-        print "=======Summary:===== \n", summary          
+        print ("=======Summary:===== \n", summary)
     
     
 '''
@@ -181,10 +181,4 @@ if __name__ == "__main__":
     from AI, and toward methods and models borrowed from statistics and probability theory."
     
     list_Sentences=segmentize(passage)
-    generateSummaries(list_Sentences, mode="Extractive")
-    
-    
-    
-    
-    
-  
+    generateSummaries(list_Sentences, mode="Abstractive")
