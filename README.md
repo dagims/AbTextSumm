@@ -17,7 +17,15 @@ Use any available ARPA format language model and convert to kenlm format as bina
 
 Other several packages required: PuLP for optimization, sklearn, nltk, cpattern, igraph
 Best option is to use Anaconda package. All the above mentioned packages can be installed using pip.
-To install dependencies, use:
+
+##Install
+
+On a Debian system, first install sqlclient library using:
+```
+apt install libmysqlclient-dev
+```
+
+Then to install python dependencies, use:
 ```
 pip install - r requirements.txt
 ```
@@ -25,7 +33,12 @@ in the root folder of the project.
 
 A major part of the word graph generation code has been taken from https://github.com/boudinfl/takahe.
 
-The main program is in txtsumm/Example.py.
+The main program is Example.py.
+
+Before running the demo download a language model.
+The 3-gram models from [here](https://www.keithv.com/software/giga/) perform
+well.
+
 Given a passage, it can generate a summary using the following code:
 ```
   list_Sentences=segmentize(passage)
