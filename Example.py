@@ -10,10 +10,16 @@ import re
 import nltk
 from absummarizer.summarizer import segmentize
 
+from flask import Flask, render_template, flash, request
+from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
+
 PROJECT_DIR=os.path.dirname(__file__)+"./"
 print ("Project dir", PROJECT_DIR)
 RESOURCES_DIR=PROJECT_DIR+"resources/"
-stopwords=wg.load_stopwords(RESOURCES_DIR+"stopwords.en.dat")  
+stopwords=wg.load_stopwords("resources/stopwords.en.dat")  
 
 rankingModes={"C":"Centroid","TR":"textrank", "CW":"contentWeighing"}
 
@@ -104,13 +110,15 @@ def generateSummaries(sentences, length=100, mode = "Extractive", ranker = ranki
     '''
     if mode == "Abstractive":
         import kenlm
-        lm = kenlm.LanguageModel(RESOURCES_DIR+'/lm-3g.klm')
+        lm = kenlm.LanguageModel('resources/lm-3g.klm')
         '''
         Here sentences should have POS tagged format
         '''
         taggedsentences=[]
-        for sent in sentences: 
-            sent=sent.decode('utf-8','ignore')
+        for sent in sentences:
+            #print("Type========" + str(type(sent)))
+            sent=sent.encode('utf-8','replace')
+            #print sent
             tagged_sent=''
             tagged_tokens=nltk.pos_tag(nltk.word_tokenize(sent))
             for token in tagged_tokens:
@@ -134,7 +142,8 @@ def generateSummaries(sentences, length=100, mode = "Extractive", ranker = ranki
     
         
         summary=txtFromSents(finalSentencesRetained)
-        print ("=======Summary:===== \n", summary)
+        #print ("=======Summary:===== \n", summary)
+        return summary
     
     if mode == "Extractive":
         lm=[] #No need of language model in Extractive
@@ -162,23 +171,95 @@ def generateSummaries(sentences, length=100, mode = "Extractive", ranker = ranki
 rankingModes={"C":"Centroid","TR":"textrank"}
 mode=["Extractive","Abstractive"]
 '''
-if __name__ == "__main__":
-    passage="As a scientific endeavour, machine learning grew out of the quest for artificial intelligence.\
-    Already in the early days of AI as an academic discipline, some researchers were interested in having machines learn from data.\
-    They attempted to approach the problem with various symbolic methods, as well as what were then termed \"neural networks\"; these were \
-    mostly perceptrons and other models that were later found to be reinventions of the generalized linear models of statistics.\
-    Probabilistic reasoning was also employed, especially in automated medical diagnosis.\
-    However, an increasing emphasis on the logical, knowledge-based approach caused a rift between AI and machine learning.\
-    Probabilistic systems were plagued by theoretical and practical problems of data acquisition and representation.\
-    By 1980, expert systems had come to dominate AI, and statistics was out of favor.[11] Work on symbolic/knowledge-based learning did\
-    continue within AI, leading to inductive logic programming, but the more statistical line of research was now outside the field of AI proper,\
-    in pattern recognition and information retrieval.[10]:708–710; 755 Neural networks research had been abandoned by AI and computer science\
-    around the same time. This line, too, was continued outside the AI/CS field, as \"connectionism\",\
-    by researchers from other disciplines including Hopfield, Rumelhart and Hinton.\
-    Their main success came in the mid-1980s with the reinvention of backpropagation. Machine learning, reorganized as a separate field,\
-    started to flourish in the 1990s. The field changed its goal from achieving artificial intelligence\
-    to tackling solvable problems of a practical nature. It shifted focus away from the symbolic approaches it had inherited\
-    from AI, and toward methods and models borrowed from statistics and probability theory."
-    
-    list_Sentences=segmentize(passage)
-    generateSummaries(list_Sentences, mode="Abstractive")
+
+DEBUG = True
+app = Flask(__name__)
+app.config.from_object(__name__)
+app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
+
+class ReusableForm(Form):
+    @app.route("/", methods=['GET', 'POST'])
+    def summarize_input_text():
+        form = ReusableForm(request.form)
+        print( form.errors)
+        if request.method == 'POST':
+            #input_text=request.form['itext'].encode('ascii', errors='replace')
+            input_text=request.form['itext']
+            print(input_text)
+            print (str(type(input_text)))
+            list_Sentences=segmentize(input_text)
+            print(list_Sentences)
+            resp = generateSummaries(list_Sentences, length=350, mode="Abstractive")
+            print ("**** Done ****")
+            return ''.join(resp) if isinstance(resp, list) else resp
+        return render_template('./form.html', form=form)
+
+class HTTPapi(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        content_type = self.headers['Content-Type']
+        if content_type == 'application/json':
+            data = self.rfile.read(content_length)
+            json_data = json.loads(data.decode('utf-8'))
+            if list(json_data.keys()).count('body') == 1:
+                input_data = json_data['body'].encode("utf-8")
+                print(input_data)
+                print(type(input_data))
+                list_Sentences=segmentize(input_data)
+                resp = generateSummaries(list_Sentences, length=150, mode="Abstractive")
+                if isinstance(resp, list):
+                    resp = ' '.join(resp)
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(resp.encode('utf-8'))
+            else:
+                self.send_response(400)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write("Input should be json with keys 'headline' and 'body'")
+        else:
+            self.send_response(400)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write("Input should be json with keys 'headline' and 'body'")
+
+flask_serve=True
+
+if flask_serve:
+    app.run(port=12221)
+else:
+    serve_address = ''
+    serve_port=12221
+    httpd = HTTPServer((serve_address, serve_port), HTTPapi)
+    try:
+        print("Starting Server on port: " + str(serve_port))
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("Exiting....")
+
+
+
+
+#
+#if __name__ == "__main__":
+#    passage="As a scientific endeavour, machine learning grew out of the quest for artificial intelligence.\
+#    Already in the early days of AI as an academic discipline, some researchers were interested in having machines learn from data.\
+#    They attempted to approach the problem with various symbolic methods, as well as what were then termed \"neural networks\"; these were \
+#    mostly perceptrons and other models that were later found to be reinventions of the generalized linear models of statistics.\
+#    Probabilistic reasoning was also employed, especially in automated medical diagnosis.\
+#    However, an increasing emphasis on the logical, knowledge-based approach caused a rift between AI and machine learning.\
+#    Probabilistic systems were plagued by theoretical and practical problems of data acquisition and representation.\
+#    By 1980, expert systems had come to dominate AI, and statistics was out of favor.[11] Work on symbolic/knowledge-based learning did\
+#    continue within AI, leading to inductive logic programming, but the more statistical line of research was now outside the field of AI proper,\
+#    in pattern recognition and information retrieval.[10]:708–710; 755 Neural networks research had been abandoned by AI and computer science\
+#    around the same time. This line, too, was continued outside the AI/CS field, as \"connectionism\",\
+#    by researchers from other disciplines including Hopfield, Rumelhart and Hinton.\
+#    Their main success came in the mid-1980s with the reinvention of backpropagation. Machine learning, reorganized as a separate field,\
+#    started to flourish in the 1990s. The field changed its goal from achieving artificial intelligence\
+#    to tackling solvable problems of a practical nature. It shifted focus away from the symbolic approaches it had inherited\
+#    from AI, and toward methods and models borrowed from statistics and probability theory."
+#    
+#    list_Sentences=segmentize(passage)
+#    resp = generateSummaries(list_Sentences, mode="Abstractive")
+#    print type(resp)
